@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+touch /var/lock/subsys/local
+
+if [ -f /var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh ]; then
+  source /root/.bash_profile;/var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh
+  rm -f /var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh
+fi
+

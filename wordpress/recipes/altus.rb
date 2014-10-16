@@ -16,11 +16,11 @@ execute "change permission" do
 end
 
 template "instance-initialize.sh" do
-  path "/var/lib/cloud/scripts/per-once/instance-initialize.sh"
-  source "instance-initialize.sh.erb"
+  path "/var/www/vhosts/#{node[:wordpress][:instance_id]}/instance-initialize.sh"
+  source "altus-instance-initialize.sh.erb"
   owner "root"
   group "root"
-  mode 0744
+  mode 0755
 end
 
 include_recipe "nginx::service"
@@ -34,3 +34,10 @@ template "www.conf" do
   notifies :restart, "service[nginx]"
 end
 
+template "rc.local" do
+  path "/etc/rc.d/rc.local"
+  source "rc.local.erb"
+  owner "root"
+  group "root"
+  mode 0755
+end

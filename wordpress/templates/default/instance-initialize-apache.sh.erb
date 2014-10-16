@@ -1,0 +1,66 @@
+#!/bin/sh
+
+genpasswd() {
+        local l=$1
+        [ "$l" == "" ] && l=16
+        tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${l} | xargs
+}
+
+# ec2 parameter set
+INSTANCE_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
+INSTACE_ID=`curl http://169.254.169.254/latest/meta-data/instance-id`
+PUBLIC_DOMAIN=`curl http://169.254.169.254/latest/meta-data/public-ipv4`
+
+RAND8=`genpasswd 8`
+RAND16=`genpasswd 16`
+DATABASE_NAME=$INSTACE_ID
+DATABASE_USER="ec_${RAND8}" 
+DATABASE_PASS=${RAND16}
+
+echo "DATABASE_NAME $DATABASE_NAME" >> /tmp/instance-initialize.log 2>&1
+echo "DATABASE_USER $DATABASE_USER" >> /tmp/instance-initialize.log 2>&1
+echo "DATABASE_PASS $DATABASE_PASS" >> /tmp/instance-initialize.log 2>&1
+
+# database alive check
+mysqladmin ping -h127.0.0.1 -uroot >> /tmp/instance-initialize.log 2>&1
+if [ ! $? -eq 0 ]; then
+  /etc/init.d/mysql restart
+  mysqladmin ping -h127.0.0.1 -uroot >> /tmp/instance-initialize.log 2>&1
+  if [ ! $? -eq 0 ]; then
+    exit
+  fi
+fi
+
+# database name check
+RESULT=`mysql -uroot -e "show databases" | grep ${DATABASE_NAME}`
+if [ "$RESULT" = "" ]; then
+mysql -uroot -e "create database \`${DATABASE_NAME}\` default character set utf8 collate utf8_unicode_ci";
+mysql -uroot -e "GRANT ALL ON \`${DATABASE_NAME}\`.* TO ${DATABASE_USER}@'127.0.0.1' IDENTIFIED BY '${DATABASE_PASS}';";
+mysql -uroot -e "FLUSH PRIVILEGES";
+fi
+
+METADATA=/var/www/vhosts/wordpress/wp-config.php
+sed -i "s/___database_pass___/${DATABASE_PASS}/g" $METADATA
+sed -i "s/___database_user___/${DATABASE_USER}/g" $METADATA
+sed -i "s/___database_name___/${DATABASE_NAME}/g" $METADATA
+
+LINE_NUMBER=`cat $METADATA | wc -l`
+SALT_BEGIN_LINE_PRE=`grep -n "define('AUTH_KEY'" $METADATA | cut -f1 -d":"`
+SALT_BEGIN_LINE=`expr ${SALT_BEGIN_LINE_PRE} - 1`
+SALT_END_LINE_PRE=`grep -n "define('NONCE_SALT'" $METADATA | cut -f1 -d":"`
+SALT_END_LINE=`expr ${LINE_NUMBER} - ${SALT_END_LINE_PRE}`
+
+CONFIG_HEAD=`head -n ${SALT_BEGIN_LINE} $METADATA`
+CONFIG_BODY=`curl https://api.wordpress.org/secret-key/1.1/salt/`
+CONFIG_TAIL=`tail -n ${SALT_END_LINE} $METADATA`
+
+if [ "${CONFIG_BODY}" != "" ]; then
+    cp -p $METADATA $METADATA.bak
+    echo "${CONFIG_HEAD}" > $METADATA
+    echo "${CONFIG_BODY}" >> $METADATA
+    echo "${CONFIG_TAIL}" >> $METADATA
+fi
+APACHE_CONF=/etc/httpd/conf.d/www.conf
+sed -i "s/___instance_public_domain___/${PUBLIC_DOMAIN}/g" $APACHE_CONF
+
+service httpd restart
