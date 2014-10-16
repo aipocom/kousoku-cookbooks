@@ -31,6 +31,8 @@ when "rhel"
   default[:nginx][:user]       = "nginx"
   default[:nginx][:binary]     = "/usr/sbin/nginx"
   default[:nginx][:pid_file]   = "/var/run/nginx.pid"
+  default[:nginx][:repository_rpm]        = "nginx-release-centos-6-0.el6.ngx.noarch.rpm"
+  default[:nginx][:repository_rpm_uri]    = "http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm"
 else
   Chef::Log.error "Cannot configure nginx, platform unknown"
 end

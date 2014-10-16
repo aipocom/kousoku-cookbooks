@@ -20,6 +20,16 @@
 
 case node["platform"]
 when "centos"
+  remote_file "/tmp/#{node[:nginx][:repository_rpm]}" do
+    source "#{node[:nginx][:repository_rpm_uri]}"
+  end
+
+  package "#{node[:nginx][:repository_rpm]}" do
+    action :install
+    provider Chef::Provider::Package::Rpm
+    source "/tmp/#{node[:nginx][:repository_rpm]}"
+  end
+
   package "nginx" do
     action [:install, :upgrade]
     options "--enablerepo=remi"
