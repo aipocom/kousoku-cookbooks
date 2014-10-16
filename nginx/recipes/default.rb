@@ -18,9 +18,16 @@
 # limitations under the License.
 #
 
-package "nginx" do
-  action [:install, :upgrade]
-  options "--enablerepo=remi"
+case node["platform"]
+when "centos"
+  package "nginx" do
+    action [:install, :upgrade]
+    options "--enablerepo=remi"
+  end
+else
+  package "nginx" do
+    action [:install, :upgrade]
+  end
 end
 
 directory node[:nginx][:dir] do
