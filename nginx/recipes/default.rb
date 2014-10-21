@@ -34,6 +34,12 @@ when "centos"
     action [:install, :upgrade]
     options "--enablerepo=remi"
   end
+
+  %w{default.conf example_ssl.conf}.each do |conffile|
+    file "conffile" do
+      action :delete
+    end
+  end
 else
   package "nginx" do
     action [:install, :upgrade]

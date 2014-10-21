@@ -26,7 +26,7 @@ if [ ! $? -eq 0 ]; then
   /etc/init.d/mysql restart
   mysqladmin ping -h127.0.0.1 -uroot >> /tmp/instance-initialize.log 2>&1
   if [ ! $? -eq 0 ]; then
-    exit
+    exit 1
   fi
 fi
 

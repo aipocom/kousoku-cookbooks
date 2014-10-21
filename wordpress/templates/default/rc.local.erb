@@ -8,6 +8,8 @@ touch /var/lock/subsys/local
 
 if [ -f /var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh ]; then
   source /root/.bash_profile;/var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh
-  rm -f /var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh
+  if [ $? -eq 0 ]; then
+    rm -f /var/www/vhosts/<%= node[:wordpress][:instance_id] %>/instance-initialize.sh
+  fi
 fi
 
