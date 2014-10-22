@@ -35,8 +35,9 @@ when "centos"
     options "--enablerepo=remi"
   end
 
-  %w{default.conf example_ssl.conf}.each do |conffile|
-    file "conffile" do
+  %w{default.conf example_ssl.conf}.each do |conf_file|
+    file "conf_file" do
+      path "/etc/nginx/conf.d/#{conf_file}"
       action :delete
     end
   end

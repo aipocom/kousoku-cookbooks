@@ -23,14 +23,14 @@ template "instance-initialize.sh" do
   mode 0744
 end
 
-include_recipe "nginx::service"
-
 template "www.conf" do
   path "/etc/nginx/conf.d/www.conf"
   source "nginx-www.conf.erb"
   owner "root"
   group "root"
   mode 0644
-  notifies :restart, "service[nginx]"
 end
 
+service "nginx" do
+  action :restart
+end
