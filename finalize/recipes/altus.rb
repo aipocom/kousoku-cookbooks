@@ -58,7 +58,6 @@ rm -rf /home/chef-user/chef-solo
 rm -f /home/chef-user/install.sh
 
 history -c
-halt
   EOH
 end
 
