@@ -8,12 +8,6 @@ package "#{node[:mysql][:percona_rpm]}" do
   source "/tmp/#{node[:mysql][:percona_rpm]}"
 end
 
-execute "rewrite repo file" do
-  command <<-EOH
-    sed -i "s/\\$releasever/6Server/g" /etc/yum.repos.d/Percona.repo
-  EOH
-end
-
 package "#{node[:mysql][:percona_package]}"
 package "#{node[:mysql][:percona_package_devel]}"
 
